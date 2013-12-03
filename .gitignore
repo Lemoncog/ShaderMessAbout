@@ -1,0 +1,9 @@
+bin/
+.settings
+gen/
+local.properties
+library/
+.gradle
+build
+output
+.DS_Store
