@@ -1,30 +1,13 @@
 package com.lemoncog.purejwjgl;
 
-import static org.lwjgl.opengl.GL11.GL_CLAMP;
-import static org.lwjgl.opengl.GL11.GL_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_NEAREST;
-import static org.lwjgl.opengl.GL11.GL_REPEAT;
-import static org.lwjgl.opengl.GL11.GL_RGBA;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_S;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_T;
-import static org.lwjgl.opengl.GL11.GL_UNPACK_ALIGNMENT;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
-import static org.lwjgl.opengl.GL11.glBindTexture;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glGenTextures;
-import static org.lwjgl.opengl.GL11.glPixelStorei;
-import static org.lwjgl.opengl.GL11.glTexImage2D;
-import static org.lwjgl.opengl.GL11.glTexParameteri;
-import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
 
 import java.nio.ByteBuffer;
 import java.util.Random;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.Display;
 
 public class DebugTextureDrawing extends JWGLBase
 {
@@ -99,6 +82,15 @@ public class DebugTextureDrawing extends JWGLBase
 	@Override
 	protected void render()
 	{
+		//usually glOrtho would not be included in our game loop
+		//however, since it's deprecated, let's keep it inside of this debug function which we will remove later
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, Display.getWidth(), Display.getHeight(), 0, 1, -1);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glEnable(GL_TEXTURE_2D); //likely redundant; will be removed upon migration to "modern GL"
+		
 		//setup our texture coordinates
 		//(u,v) is another common way of writing (s,t)
 		float u = 0f;
@@ -106,8 +98,11 @@ public class DebugTextureDrawing extends JWGLBase
 		float u2 = 1f;
 		float v2 = 1f;
 
-		float x = -10;//-(getWidth()/2);
-		float y = -10;//(getHeight()/2);
+		float x = 100;
+		float y = 0;
+		
+
+		glClear(GL_COLOR_BUFFER_BIT);
 		
 		//immediate mode is deprecated -- we are only using it for quick debugging
 		glColor4f(1f, 1f, 1f, 1f);

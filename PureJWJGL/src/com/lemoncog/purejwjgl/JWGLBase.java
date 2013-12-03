@@ -54,7 +54,7 @@ public class JWGLBase {
 	// Start our game
 	public void start() throws LWJGLException {
 		// Set up our display
-		Display.setTitle("Display example"); // title of our window
+		Display.setTitle(mTitle);
 		Display.setResizable(true); // whether our window is resizable
 		Display.setDisplayMode(new DisplayMode(mWidth, mHeight)); // resolution
 																	// of
