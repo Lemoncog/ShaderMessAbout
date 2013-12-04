@@ -8,8 +8,8 @@ public class Main {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
 		cfg.title = "ShaderMessAbout";
 		cfg.useGL20 = true;
-		cfg.width = 480;
-		cfg.height = 320;
+		cfg.width = 1280;
+		cfg.height = 620;
 		
 		new LwjglApplication(new ShaderMessAbout(), cfg);
 	}

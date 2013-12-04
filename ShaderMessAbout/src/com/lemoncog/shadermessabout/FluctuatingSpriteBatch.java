@@ -29,13 +29,13 @@ public class FluctuatingSpriteBatch extends SpriteBatch
 		if (mCustomShader != null)
 		{
 			//setFlucuate();
-			setSource();
+			//setSource();
 		}
 	}
 
 	private void setSource()
 	{		
-		alpha+=0.002f;
+		alpha+=0.02f;
 		
 		if(alpha > 1)
 		{
@@ -43,7 +43,10 @@ public class FluctuatingSpriteBatch extends SpriteBatch
 			TARGET_VEC.set(rand.nextFloat(), rand.nextFloat());
 		}
 		
-		MOVING_VEC.lerp(TARGET_VEC, alpha);
+		float xDiff = TARGET_VEC.x - MOVING_VEC.x;
+		float yDiff = TARGET_VEC.y - MOVING_VEC.y;
+		
+		MOVING_VEC.add(xDiff*0.02f, yDiff*0.02f);
 		
 		mCustomShader.setUniformf("u_l_source0", MOVING_VEC);
 	}

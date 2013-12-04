@@ -6,38 +6,36 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Vector2;
 
 public class ShaderMessAbout implements ApplicationListener
 {
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Texture texture;
-	private Sprite sprite;
 
+	public static final int FBO_SIZE = 1024;
+	
 	@Override
 	public void create()
 	{
 		float w = Gdx.graphics.getWidth();
 		float h = Gdx.graphics.getHeight();
 
-		camera = new OrthographicCamera(1, h / w);
+		camera = new OrthographicCamera(w, h);
+		camera.setToOrtho(false);
 		batch = new FluctuatingSpriteBatch();
 
 		texture = new Texture(Gdx.files.internal("data/libgdx.png"));
 		texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-
-		TextureRegion region = new TextureRegion(texture, 0, 0, 512, 275);
-
-		sprite = new Sprite(region);
-		sprite.setSize(0.9f, 0.9f * sprite.getHeight() / sprite.getWidth());
-		sprite.setOrigin(sprite.getWidth() / 2, sprite.getHeight() / 2);
-		sprite.setPosition(-sprite.getWidth() / 2, -sprite.getHeight() / 2);
 
 		Gdx.input.setInputProcessor(new InputAdapter()
 		{
@@ -55,6 +53,8 @@ public class ShaderMessAbout implements ApplicationListener
 			}
 		});
 	}
+	
+	private ShaderProgram mSecondShaderProgram;
 
 	protected void loadShaderProgram()
 	{
@@ -62,13 +62,16 @@ public class ShaderMessAbout implements ApplicationListener
 
 		if (testShader.isCompiled())
 		{
-			Gdx.app.log(ShaderMessAbout.class.getSimpleName(), "++++++++++++++++++++++++++++++++++SHADER SUCCESS++++++++++++++++++++++++++++++++++++++++++++++=");
-			batch.setShader(testShader);
+			Gdx.app.log(ShaderMessAbout.class.getSimpleName(),
+					"++++++++++++++++++++++++++++++++++SHADER SUCCESS++++++++++++++++++++++++++++++++++++++++++++++=");
+			mSecondShaderProgram = testShader;
 		} else
 		{
-			Gdx.app.log(ShaderMessAbout.class.getSimpleName(), "==================================SHADER FAILE===============================================");
+			Gdx.app.log(ShaderMessAbout.class.getSimpleName(),
+					"==================================SHADER FAILE===============================================");
 			Gdx.app.log(ShaderMessAbout.class.getSimpleName(), testShader.getLog());
-			Gdx.app.log(ShaderMessAbout.class.getSimpleName(), "=============================================================================================");
+			Gdx.app.log(ShaderMessAbout.class.getSimpleName(),
+					"=============================================================================================");
 		}
 	}
 
@@ -79,15 +82,67 @@ public class ShaderMessAbout implements ApplicationListener
 		texture.dispose();
 	}
 
+	private FrameBuffer mFrameBuffer;
+	private TextureRegion mFrameTextureRegion;
+	//private SpriteBatch mOverlayBatch;
+
+	private Vector2 mousePos = new Vector2();
+
+	void resizeBatch(int width, int height) {
+		camera.setToOrtho(false, width, height);
+		batch.setProjectionMatrix(camera.combined);
+	}
+	
+	void renderEntities(SpriteBatch batch) {
+		batch.draw(texture, 0, 0);
+		//batch.draw(tex2, tex.getWidth()+5, 30);
+	}
+	
 	@Override
 	public void render()
 	{
-		Gdx.gl.glClearColor(1, 1, 1, 1);
+		if (mSecondShaderProgram != null)
+		{
+			float blurX = Gdx.input.getX()/ (float)Gdx.graphics.getWidth();
+		//	mSecondShaderProgram.setUniformf("u_fluctuate", blurX * 2);
+		}
+
+		int width = Gdx.graphics.getWidth();
+		int height = Gdx.graphics.getHeight();
+
+		if (mFrameBuffer == null)
+		{
+			mFrameBuffer = new FrameBuffer(Format.RGBA8888, width, height, false);
+			mFrameTextureRegion = new TextureRegion(mFrameBuffer.getColorBufferTexture());
+			mFrameTextureRegion.flip(false, true);
+		}
+
+		Gdx.gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
-		batch.setProjectionMatrix(camera.combined);
+		batch.setShader(null);
+		resizeBatch(FBO_SIZE, FBO_SIZE);
+
+		mFrameBuffer.begin();
+
 		batch.begin();
-		sprite.draw(batch);
+
+		renderEntities(batch);
+
+		batch.flush();
+
+		mFrameBuffer.end();
+
+		
+		if(mSecondShaderProgram != null)
+		{
+			batch.setShader(mSecondShaderProgram);
+		}
+		
+		resizeBatch(FBO_SIZE, FBO_SIZE);
+		
+		batch.draw(mFrameTextureRegion, 0, 0);
+
 		batch.end();
 	}
 
